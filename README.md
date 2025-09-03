@@ -1,69 +1,78 @@
-# React + TypeScript + Vite
+# Project Description
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Deployed Frontend URL:** https://tipping-jar-fe.vercel.app/
 
-Currently, two official plugins are available:
+**Solana Program ID:** BzjrZ3brEiciUeNoyrnB5TgDaiipRGxnRjh4Yw6SZkjR
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Project Overview
 
-## Expanding the ESLint configuration
+### Description
+Tipping Jar is a decentralized application built on Solana that enables users to create personal tipping jars (PDAs) to receive SOL from others. Anyone can send tips to a jar, but only the jar’s owner can withdraw the funds. This dApp demonstrates essential Solana concepts like Program Derived Addresses, secure ownership checks, lamport transfers, and integration with a modern React + Tailwind frontend.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Key Features
+[TODO: List the main features of your dApp. Be specific about what users can do.]
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Initialize Jar**: Create a personal tipping jar PDA tied to your wallet
+- **Send Tip**: Any wallet can tip a jar owner by entering their address and amount
+- **Withdraw**: Only the jar owner can withdraw accumulated tips while keeping the account rent-exempt
+- **Wallet Integration**: Phantom and Solflare support using Solana Wallet Adapter
+- **Modern UI**: Clean, responsive interface with Tailwind CSS
+  
+### How to Use the dApp
+1. **Connect Wallet** – Connect your Solana wallet (Phantom/Solflare)
+2. **Initialize Jar** – Click “Initialize Jar” to create your personal jar account (PDA)
+3. **Send Tip** – Enter a jar owner’s address, specify amount, and send SOL from your wallet
+4. **Withdraw** – If you are the jar owner, click “Withdraw” to move tips from PDA → your wallet
+5. **View Flow** – Tips accumulate in the PDA until withdrawn by the owner
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+## Program Architecture
+The Tipping Jar dApp uses a simple but complete architecture with one main account type (Jar) and three core instructions.
+The program leverages PDAs to ensure that each jar is uniquely tied to an owner wallet, preventing unauthorized access and enabling deterministic addressing.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### PDA Usage
+The program creates deterministic jar accounts for each wallet owner:
+
+- Jar PDA: Derived from seeds ["jar", owner_wallet_pubkey]
+- Ensures each wallet has a unique jar account
+- Only the wallet that created the jar can withdraw funds
+
+### Program Instructions
+These are the instructions implemented in the program: 
+
+**Instructions Implemented:**
+- **InitializeJar**: Creates a new Jar PDA for the connected wallet and stores owner + bump
+- **Tip**: Allows any wallet to transfer SOL into the Jar PDA
+- **Withdraw**: Transfers accumulated lamports from Jar PDA → Owner’s wallet, ensuring rent exemption remains
+
+### Account Structure
+```rust
+#[account]
+pub struct Jar {
+    pub owner: Pubkey, // The wallet that owns this jar
+    pub bump: u8,      // PDA bump seed
+}
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Testing
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Test Coverage
+Here is the description of the tests covered:
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+**Happy Path Tests:**
+1. **Initialize a Jar PDA for an Owner**
+2. **Accepts a Non-Zero Tip**
+3. **Allows Owner to Withdraw Funds**
+4. **Accepts Multiple Tips and Accumulates Them**
+
+**Unhappy Path Tests:**
+1. **Rejects Re-Initialization of an Existing Jar**
+2. **Rejects a Zero Tip**
+3. **Does Not Allow Non-Owner to Withdraw**
+4. **Does Not Allow Withdraw if Jar is Empty**
+5. **Rejects a Tip if Tipper Has Insufficient Balance**
+
+### Running Tests
+```bash
+yarn install
+anchor test
 ```

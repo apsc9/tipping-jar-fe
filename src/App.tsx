@@ -7,7 +7,7 @@ import BN from "bn.js";
 
 function App() {
   const wallet = useWallet();
-  const [ownerPubkey, setOwnerPubkey] = useState("");
+  const [ownerPubkey, setOwnerPubkey] = useState("bAjCmbi4SpW6ysb1rm82u6wT2eBGYgVasSKo5QM2JCw");
   const [amount, setAmount] = useState("");
 
   const initializeJar = async () => {
